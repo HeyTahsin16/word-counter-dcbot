@@ -80,14 +80,14 @@ node bot.js
 
 ## 📋 Slash Commands
 
-| Command | Who | Description |
-|---|---|---|
-| `/wordcounter` | Admin | Start the game in the current channel |
-| `/wordcounter-stop` | Admin | Stop the game |
-| `/lookup <word>` | Anyone | Check if a word has been claimed (private reply) |
-| `/stats` | Anyone | Leaderboard of top contributors |
-| `/recent` | Anyone | The 10 most recently said words |
-| `/wordcount` | Anyone | Total unique words said so far |
+| Command | Who | Visible to | Description |
+|---|---|---|---|
+| `/wordcounter` | Admin | Everyone | Start the game in the current channel |
+| `/wordcounter-stop` | Admin | Everyone | Stop the game |
+| `/lookup <word>` | Anyone | Only you | Check if a word has been claimed |
+| `/stats` | Anyone | Only you | Leaderboard of top contributors |
+| `/recent` | Anyone | Only you | The 10 most recently said words |
+| `/wordcount` | Anyone | Only you | Total unique words said so far |
 
 ---
 

@@ -226,7 +226,7 @@ client.on("interactionCreate", async (interaction) => {
     const total = countUsed(guild.id);
     const top   = topUsers(guild.id);
     const lb    = top.map((r, i) => `${i + 1}. **${r.username}** — ${r.cnt} word${r.cnt !== 1 ? "s" : ""}`).join("\n") || "No data yet.";
-    await interaction.reply(`📊 **Word Counter Stats**\n\nTotal unique words: **${total.toLocaleString()}**\n\n🏆 **Top Contributors:**\n${lb}`);
+    await interaction.reply({ content: `📊 **Word Counter Stats**\n\nTotal unique words: **${total.toLocaleString()}**\n\n🏆 **Top Contributors:**\n${lb}`, flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -237,9 +237,9 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
     const rows = recentWords(guild.id);
-    if (!rows.length) { await interaction.reply("No words have been said yet!"); return; }
+    if (!rows.length) { await interaction.reply({ content: "No words have been said yet!", flags: MessageFlags.Ephemeral }); return; }
     const list = rows.map((r, i) => `${i + 1}. **${r.word}** — ${r.username}`).join("\n");
-    await interaction.reply(`🕐 **10 Most Recently Said Words:**\n${list}`);
+    await interaction.reply({ content: `🕐 **10 Most Recently Said Words:**\n${list}`, flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -250,7 +250,7 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
     const total = countUsed(guild.id);
-    await interaction.reply(`📝 **${total.toLocaleString()}** unique word${total !== 1 ? "s" : ""} said so far!`);
+    await interaction.reply({ content: `📝 **${total.toLocaleString()}** unique word${total !== 1 ? "s" : ""} said so far!`, flags: MessageFlags.Ephemeral });
     return;
   }
 });
