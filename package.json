@@ -4,7 +4,7 @@
   "description": "Discord Word Counter Bot — like the counting bot but for unique English words",
   "main": "bot.js",
   "scripts": {
-    "start": "node download-words.js && node bot.js"
+    "start": "node download-words.js && node bot.js";
     "setup": "node download-words.js"
   },
   "dependencies": {
