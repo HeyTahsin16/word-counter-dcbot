@@ -24,7 +24,7 @@ A Discord bot inspired by counting bots — but instead of numbers, players coll
 - 1-3. Go to variables on your project then use this variable  `DISCORD_TOKEN`  while the value will be your application's token.
 - 1-4. Click the top right corner add button inside your project in railway.
 - 1-5. Add volume.
-- 1-6. Use this path `/app/data`
+- 1-6. Use this path `/app/data`.
 - 1-7. Add custom words in `words.txt` in data folder.
 - 1-8. Skip other steps.
 
