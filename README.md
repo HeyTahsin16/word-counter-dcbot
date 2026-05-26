@@ -9,14 +9,19 @@ A Discord bot inspired by counting bots — but instead of numbers, players coll
 1. An admin runs `/wordcounter` in a channel to start the game.
 2. Players type **a single valid English word** in that channel.
 3. If the word is new → it gets logged with the author's name.
-4. If the word was already said → the bot **silently deletes** it and DMs the player who it belongs to.
-5. If someone types gibberish → silently deleted + DM warning.
+4. If the word was already said → the bot **silently deletes** it and notifies the player who it belongs to.
+5. If someone types gibberish → silently deleted + warning.
 6. **No consecutive words** — you must wait for someone else to go before you go again.
 7. If someone **deletes their word** → the bot announces it publicly so everyone knows it's back.
 
 ---
 
 ## 🛠 Setup
+
+### Ignore this if forking this repo for railway.
+## 1-1. Only create a bot from [Discord Developer Portal](https://discord.com/developers/applications) copy the token. Host it on railway.
+## 1-2. go to variables on your project then use this variable  `DISCORD_TOKEN`  while the value will be your application's token.
+## 1-3 skip other steps.
 
 ### 1. Prerequisites
 
