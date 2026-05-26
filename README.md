@@ -18,10 +18,11 @@ A Discord bot inspired by counting bots — but instead of numbers, players coll
 
 ## 🛠 Setup
 
-### Ignore the setup and do this if forking this repo for railway.
-- 1-1. Only create a bot from [Discord Developer Portal](https://discord.com/developers/applications) copy the token. Host it on railway.
-- 1-2. go to variables on your project then use this variable  `DISCORD_TOKEN`  while the value will be your application's token.
-- 1-3. skip other steps.
+### Do this if forking this repo for railway.
+- 1-1. Only create a bot from [Discord Developer Portal](https://discord.com/developers/applications) copy the token.
+- 1-2. Host your fork on railway.
+- 1-3. go to variables on your project then use this variable  `DISCORD_TOKEN`  while the value will be your application's token.
+- 1-4. skip other steps.
 
 ### 1. Prerequisites
 
