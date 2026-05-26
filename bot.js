@@ -278,8 +278,15 @@ client.on("messageCreate", async (message) => {
   const raw  = message.content.trim();
   const word = raw.toLowerCase();
 
-  // Single word only (no spaces)
-  if (!raw || /\s/.test(raw)) return;
+  // Single word only — delete and warn if multiple words sent
+  if (!raw) return;
+  if (/\s/.test(raw)) {
+    botDeletedMessages.add(message.id);
+    await message.delete().catch(() => {});
+    await tempMsg(message.channel, message.author.id,
+      "❌ Only **one word at a time**! Your message was removed.");
+    return;
+  }
 
   // Anti-spam: no consecutive words by the same user
   const lastWriter = getLastWriter(message.guild.id);
