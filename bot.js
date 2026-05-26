@@ -20,6 +20,9 @@ const fs        = require("fs");
 const path      = require("path");
 require("dotenv").config();
 
+// Track message IDs deleted by the bot so messageDelete doesn't misfire
+const botDeletedMessages = new Set();
+
 // ── Database ───────────────────────────────────────────────────────────────────
 const DATA_DIR  = path.join(__dirname, "data");
 const DB_FILE   = path.join(DATA_DIR, "wordbot.db");
@@ -183,7 +186,7 @@ client.on("interactionCreate", async (interaction) => {
       "**How to play:**\n" +
       "• Type any **single valid English word** — if nobody's said it before, it's yours!\n" +
       "• You **cannot** say two words in a row — someone else must go between yours.\n" +
-      "• Duplicates & gibberish are silently removed; you'll get a private DM with details.\n" +
+      "• Duplicates & gibberish are removed; you'll get a brief notice that only lasts a few seconds.\n" +
       "• If you **delete your word**, the bot announces it publicly so everyone knows it's free.\n\n" +
       "Use `/lookup <word>` to check if a word is taken (only you see the reply). Good luck! 🎉"
     );
@@ -252,6 +255,18 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Send a temporary message visible to everyone but auto-deleted after `ms` ms.
+ * Mentions the target user so only they get a notification ping — everyone else
+ * sees it flash briefly and it disappears. Clean, no DMs needed.
+ */
+async function tempMsg(channel, userId, text, ms = 6000) {
+  const msg = await channel.send(`<@${userId}> ${text}`).catch(() => null);
+  if (msg) setTimeout(() => msg.delete().catch(() => {}), ms);
+}
+
 // ── Messages ───────────────────────────────────────────────────────────────────
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
@@ -269,23 +284,29 @@ client.on("messageCreate", async (message) => {
   // Anti-spam: no consecutive words by the same user
   const lastWriter = getLastWriter(message.guild.id);
   if (lastWriter && lastWriter.user_id === message.author.id) {
+    botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
-    message.author.send("⛔ **Word Counter:** You can't say two words in a row! Wait for someone else first.").catch(() => {});
+    await tempMsg(message.channel, message.author.id,
+      "⛔ You can't say two words in a row! Wait for someone else first.");
     return;
   }
 
-  // Blacklist check first (most likely rejection reason in active games)
+  // Blacklist check first (most likely rejection in active games)
   const existing = getUsed(message.guild.id, word);
   if (existing) {
+    botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
-    message.author.send(`🚫 **Word Counter:** **"${word}"** was already claimed by **${existing.username}**. Try a different word!`).catch(() => {});
+    await tempMsg(message.channel, message.author.id,
+      `🚫 **"${word}"** was already claimed by **${existing.username}**. Try a different word!`);
     return;
   }
 
   // Validate against word list
   if (!isValidWord(word)) {
+    botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
-    message.author.send(`❌ **Word Counter:** **"${raw}"** isn't a recognised English word. Try again!`).catch(() => {});
+    await tempMsg(message.channel, message.author.id,
+      `❌ **"${raw}"** isn't a recognised English word. Try again!`);
     return;
   }
 
@@ -297,6 +318,9 @@ client.on("messageCreate", async (message) => {
 
 // ── Message delete ─────────────────────────────────────────────────────────────
 client.on("messageDelete", async (message) => {
+  // Bot deleted this message — don't treat it as a user deletion
+  if (botDeletedMessages.delete(message.id)) return;
+
   if (message.author?.bot || !message.guild) return;
 
   const cfg = getConfig(message.guild.id);
