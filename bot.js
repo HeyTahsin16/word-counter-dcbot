@@ -59,6 +59,11 @@ async function initDb() {
       user_id  TEXT NOT NULL,
       PRIMARY KEY (guild_id)
     );
+    CREATE TABLE IF NOT EXISTS removed_count (
+      guild_id TEXT NOT NULL,
+      count    INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (guild_id)
+    );
   `);
 
   saveDb();
@@ -98,6 +103,8 @@ const topUsers        = (g)         => query("SELECT username, COUNT(*) as cnt F
 const recentWords     = (g)         => query("SELECT word, username FROM used_words WHERE guild_id = ? ORDER BY used_at DESC LIMIT 10", [g]);
 const getLastWriter   = (g)         => queryOne("SELECT user_id FROM last_writer WHERE guild_id = ?", [g]);
 const upsertLastWriter= (g, u)      => run("INSERT OR REPLACE INTO last_writer (guild_id, user_id) VALUES (?, ?)", [g, u]);
+const getRemovedCount = (g)         => queryOne("SELECT count FROM removed_count WHERE guild_id = ?", [g])?.count ?? 0;
+const incrementRemoved= (g)         => run("INSERT INTO removed_count (guild_id, count) VALUES (?, 1) ON CONFLICT(guild_id) DO UPDATE SET count = count + 1", [g]);
 
 // ── Word list ─────────────────────────────────────────────────────────────────
 let WORD_SET = new Set();
@@ -223,10 +230,11 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.reply({ content: "Word Counter isn't active in this server.", flags: MessageFlags.Ephemeral });
       return;
     }
-    const total = countUsed(guild.id);
-    const top   = topUsers(guild.id);
-    const lb    = top.map((r, i) => `${i + 1}. **${r.username}** — ${r.cnt} word${r.cnt !== 1 ? "s" : ""}`).join("\n") || "No data yet.";
-    await interaction.reply({ content: `📊 **Word Counter Stats**\n\nTotal unique words: **${total.toLocaleString()}**\n\n🏆 **Top Contributors:**\n${lb}`, flags: MessageFlags.Ephemeral });
+    const total   = countUsed(guild.id);
+    const removed = getRemovedCount(guild.id);
+    const top     = topUsers(guild.id);
+    const lb      = top.map((r, i) => `${i + 1}. **${r.username}** — ${r.cnt} word${r.cnt !== 1 ? "s" : ""}`).join("\n") || "No data yet.";
+    await interaction.reply({ content: `📊 **Word Counter Stats**\n\nTotal unique words: **${total.toLocaleString()}**\nTotal removed words: **${removed.toLocaleString()}**\n\n🏆 **Top Contributors:**\n${lb}`, flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -283,6 +291,7 @@ client.on("messageCreate", async (message) => {
   if (/\s/.test(raw)) {
     botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
+    incrementRemoved(message.guild.id);
     await tempMsg(message.channel, message.author.id,
       "❌ Only **one word at a time**! Your message was removed.");
     return;
@@ -293,6 +302,7 @@ client.on("messageCreate", async (message) => {
   if (lastWriter && lastWriter.user_id === message.author.id) {
     botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
+    incrementRemoved(message.guild.id);
     await tempMsg(message.channel, message.author.id,
       "⛔ You can't say two words in a row! Wait for someone else first.");
     return;
@@ -303,6 +313,7 @@ client.on("messageCreate", async (message) => {
   if (existing) {
     botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
+    incrementRemoved(message.guild.id);
     await tempMsg(message.channel, message.author.id,
       `🚫 **"${word}"** was already claimed by **${existing.username}**. Try a different word!`);
     return;
@@ -312,6 +323,7 @@ client.on("messageCreate", async (message) => {
   if (!isValidWord(word)) {
     botDeletedMessages.add(message.id);
     await message.delete().catch(() => {});
+    incrementRemoved(message.guild.id);
     await tempMsg(message.channel, message.author.id,
       `❌ **"${raw}"** isn't a recognised English word. Try again!`);
     return;
